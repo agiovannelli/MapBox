@@ -1,0 +1,13 @@
+url: https://www.mapbox.com
+api: https://www.mapbox.com/core
+tileApi: https://api.mapbox.com
+source: docs
+permalink: /:categories/:title
+baseurl: /mapbox-android-sdk-legacy
+highlighter: pygments
+version: 0.7.0
+snapshot: 0.7.1-SNAPSHOT
+defaultid: 'mapbox.streets'
+mapboxjs: v2.2.1
+rdiscount:
+  extensions: [smart]
