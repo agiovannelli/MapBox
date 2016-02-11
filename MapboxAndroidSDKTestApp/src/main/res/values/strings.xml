@@ -3,8 +3,10 @@
 
     <string name="appName">Mapbox Android SDK Test App</string>
 
-    <!-- Adding name description for dialog -->
-    <string name = "navigationDialog">Navigation</string>
+    <!-- Navigation Dialog Form Changes -->
+    <string name="navigationDialog">Navigation</string>
+    <string name="navigation_message"> Input address... </string>
+    <string name="search_message"> Search... </string>
 
     <string name="mainTestMap">Main Test Map</string>
     <string name="alternateTestMap">Alternate Test Map</string>
@@ -40,9 +42,10 @@
     <string name="resetMapButtonText">Reset</string>
     <string name="goToButtonText">Go To</string>
     <string name="animatedMapButtonText">Animate</string>
-    <string name="testAccessToken">pk.eyJ1IjoiYmxlZWdlIiwiYSI6IkRGLTFPU00ifQ.qJpq3jytAL9A-z_tkNypqg</string>
+    <string name="testAccessToken">pk.eyJ1IjoiZ2lvdmFuYWIiLCJhIjoiY2lraGJ5Y2prMDFlNnRpajc4aXptc2gwbSJ9.nQHNX41dUzTGNW3CNjqCXw</string>
     <string name="customInfoWindowOnTouchMessage">Hey, I just customized the CustomInfoWindows\'s onTouchListener()!</string>
     <string name="navigationdrawer_open">open</string>
     <string name="navigationdrawer_close">close</string>
+    <string name="title_activity_navigation_map">NavigationMapActivity</string>
 
 </resources>

@@ -3,4 +3,6 @@
     <string name="toolTipTitle">Title</string>
     <string name="toolTipDescription">Description</string>
     <string name="toolTipAddress">Address</string>
+    <string name="toolTipNavigate"><a href="">Navigate...</a></string>
 </resources>
+

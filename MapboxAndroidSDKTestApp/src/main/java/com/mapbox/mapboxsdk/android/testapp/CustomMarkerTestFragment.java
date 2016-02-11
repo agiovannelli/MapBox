@@ -12,10 +12,12 @@ import com.mapbox.mapboxsdk.overlay.Icon;
 import com.mapbox.mapboxsdk.overlay.Marker;
 import com.mapbox.mapboxsdk.views.MapView;
 
-public class CustomMarkerTestFragment extends Fragment {
+public class CustomMarkerTestFragment extends Fragment
+{
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+    {
         View view = inflater.inflate(R.layout.fragment_custommarkermap, container, false);
 
         MapView mv = (MapView) view.findViewById(R.id.customMarkerMapView);
@@ -31,6 +33,7 @@ public class CustomMarkerTestFragment extends Fragment {
         mv.addMarker(capital);
 
         Marker bigCity = new Marker(mv, "Dar es Salaam", "", new LatLng(-6.80610, 39.27046));
+
         bigCity.setToolTip(new CustomInfoWindow(mv));
         mv.addMarker(bigCity);
 

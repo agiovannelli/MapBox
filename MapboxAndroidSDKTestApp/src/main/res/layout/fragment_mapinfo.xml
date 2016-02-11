@@ -2,45 +2,45 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:layout_height="wrap_content">
 
     <LinearLayout
-        android:background="@color/button_material_light"
-        android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@color/button_material_light"
+        android:padding="5dp"
         android:orientation="vertical">
 
         <TextView
+            android:textColor="@color/black"
+            android:textSize="30sp"
+            android:layout_gravity="start"
+            android:layout_weight="1"
             android:id="@+id/customTooltip_title"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:textColor="@color/black"
-            android:textSize="25sp"
-            android:layout_gravity="start"
-            android:layout_weight="1"
             android:text="@string/toolTipTitle"/>
 
         <TextView
             android:id="@+id/customTooltip_Description"
+            android:textColor="@color/black"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:textColor="@color/black"
-            android:textSize="25sp"
+            android:textSize="30sp"
             android:layout_gravity="start"
             android:layout_weight="1"
             android:text="@string/toolTipDescription"/>
 
         <TextView
+            android:layout_gravity="start"
+            android:layout_weight="1"
             android:id="@+id/customTooltip_Navigate"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:textColor="@color/black"
-            android:textSize="25sp"
-            android:layout_gravity="start"
-            android:layout_weight="1"
+            android:textSize="30sp"
             android:text="@string/toolTipNavigate"/>
 
     </LinearLayout>

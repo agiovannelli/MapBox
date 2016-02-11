@@ -1,5 +1,7 @@
 package com.cocoahero.android.geojson;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.io.InputStream;
 

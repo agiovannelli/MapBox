@@ -1,6 +1,14 @@
 package com.mapbox.mapboxsdk.android.testapp;
 
+import android.app.FragmentTransaction;
+import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -12,6 +20,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -37,8 +51,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		testFragmentNames = mNavigationView.getMenu();
 		int i = 0;
 
-		// Display new button labeled "Navigation".
-		testFragmentNames.add(Menu.NONE, i++, Menu.NONE, getString(R.string.navigationDialog));
+		// Display new button labeled "Navigation" and set it's case value manually to '20'.
+		testFragmentNames.add(Menu.NONE, 20, Menu.NONE, getString(R.string.navigationDialog));
 
 		testFragmentNames.add(Menu.NONE, i++, Menu.NONE, getString(R.string.mainTestMap));
 		testFragmentNames.add(Menu.NONE, i++, Menu.NONE, getString(R.string.alternateTestMap));
@@ -60,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		testFragmentNames.add(Menu.NONE, i++, Menu.NONE, getString(R.string.clusteredMarkersTestMap));
 		testFragmentNames.add(Menu.NONE, i++, Menu.NONE, getString(R.string.mbTilesTestMap));
         testFragmentNames.add(Menu.NONE, i, Menu.NONE, getString(R.string.draggableMarkersTestMap));
+
 
 
 		// Set the drawer toggle as the DrawerListener
@@ -162,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 fragment = new DraggableMarkersTestFragment();
                 break;
 			case 20:
-				fragment = new NavigationDialogTestFragment();
+				fragment = new NavigationClass();
 				break;
 			default:
 				fragment = new MainTestFragment();
@@ -191,10 +206,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 	@Override
 	public void onBackPressed() {
-		if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+		if (mDrawerLayout.isDrawerOpen(GravityCompat.START))
+		{
 			mDrawerLayout.closeDrawer(GravityCompat.START);
-		} else {
+		} else
+		{
 			super.onBackPressed();
 		}
 	}
+
 }
