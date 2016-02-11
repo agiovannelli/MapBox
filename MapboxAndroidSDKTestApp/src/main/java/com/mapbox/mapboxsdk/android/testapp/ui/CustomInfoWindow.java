@@ -209,7 +209,7 @@ public class CustomInfoWindow extends InfoWindow
                 nested_li.addView(tvMiles);
 
                 Button myButton = new Button(context);
-                myButton.setBackgroundResource(R.color.mapboxGreen);
+                myButton.setBackgroundResource(R.color.mapboxBlue);
                 myButton.setText("SELECT");
                 myButton.setTextColor(Color.WHITE);
                 myButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
