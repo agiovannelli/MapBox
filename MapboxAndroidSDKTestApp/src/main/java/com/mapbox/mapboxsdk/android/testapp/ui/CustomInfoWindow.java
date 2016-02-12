@@ -40,6 +40,7 @@ import java.util.List;
 
 public class CustomInfoWindow extends InfoWindow
 {
+    // Original Overload for CustomInfoWindow.
     public CustomInfoWindow(MapView mv)
     {
         super(R.layout.infowindow_custom, mv);
@@ -65,7 +66,7 @@ public class CustomInfoWindow extends InfoWindow
     double latitude;
     double longitude;
 
-    // Overload for InfoWindow to include LatLng datatype parameter for navigation destination.
+    // Overload for InfoWindow to include LatLng DataType parameter for navigation destination.
     public CustomInfoWindow(final MapView mapView, final LatLng navigateTo)
     {
         super(R.layout.infowindow_custom, mapView);
@@ -80,7 +81,7 @@ public class CustomInfoWindow extends InfoWindow
 
                     Geocoder geo;
                     String finalProvider;
-                    List<Address> user = null;
+                    List<Address> addressList = null;
                     LocationManager locationManager = (LocationManager) v.getContext().getSystemService(Context.LOCATION_SERVICE);
 
                     Criteria criteria = new Criteria();
@@ -96,10 +97,10 @@ public class CustomInfoWindow extends InfoWindow
                         // Case for when the location can be determined.
                         if (location != null)
                         {
-                            user = geo.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-                            latitude = (double) user.get(0).getLatitude();
-                            longitude = (double) user.get(0).getLongitude();
-                            mapView.addMarker(new Marker(mapView, user.get(0).getAddressLine(0), user.get(0).getLocality() + ", " + user.get(0).getAdminArea(), new LatLng(latitude, longitude)));
+                            addressList = geo.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                            latitude = (double) addressList.get(0).getLatitude();
+                            longitude = (double) addressList.get(0).getLongitude();
+                            mapView.addMarker(new Marker(mapView, addressList.get(0).getAddressLine(0), addressList.get(0).getLocality() + ", " + addressList.get(0).getAdminArea(), new LatLng(latitude, longitude)));
 
                         }
                         // Case for when the location can not be determined.
@@ -114,6 +115,7 @@ public class CustomInfoWindow extends InfoWindow
 
                         URL url = new URL(sURL);
                         HttpURLConnection request = (HttpURLConnection) url.openConnection();
+
                         request.setRequestMethod("GET");
                         request.setRequestProperty("Content-length", "0");
                         request.setUseCaches(false);
@@ -123,7 +125,6 @@ public class CustomInfoWindow extends InfoWindow
                         JSONObject jsonObject = null;
                         jsonObject = readJsonFromUrl(sURL);
                         displayRoutes(mapView, v.getContext(), jsonObject);
-
                     }
                     catch (IOException e)
                     {
@@ -140,14 +141,16 @@ public class CustomInfoWindow extends InfoWindow
         });
     }
 
-    private static String readAll(Reader rd) throws IOException
+    private static String readAll(Reader reader) throws IOException
     {
+        int temp;
         StringBuilder sb = new StringBuilder();
-        int cp;
-        while ((cp = rd.read()) != -1)
+
+        while ((temp = reader.read()) != -1)
         {
-            sb.append((char) cp);
+            sb.append((char) temp);
         }
+
         return sb.toString();
     }
 
@@ -159,8 +162,8 @@ public class CustomInfoWindow extends InfoWindow
         {
             BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
             String jsonText = readAll(rd);
-            JSONObject json = new JSONObject(jsonText);
-            return json;
+            JSONObject jsonObject = new JSONObject(jsonText);
+            return jsonObject;
         }
         finally
         {
@@ -171,9 +174,9 @@ public class CustomInfoWindow extends InfoWindow
     // Display route from read JSON object.
     private void displayRoutes(final MapView mv, final Context context, final JSONObject jsonObject)
     {
-        LayoutInflater li = LayoutInflater.from(context);
+        LayoutInflater layoutInflater = LayoutInflater.from(context);
 
-        View promptsView = li.inflate(R.layout.fragment_route, null);
+        View promptsView = layoutInflater.inflate(R.layout.fragment_route, null);
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
         alertDialogBuilder.setView(promptsView);
@@ -190,33 +193,33 @@ public class CustomInfoWindow extends InfoWindow
             {
                 double distance = Double.parseDouble(jsonObject.getJSONArray("routes").getJSONObject(i).get("distance").toString());
 
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                LinearLayout nested_li = new LinearLayout(context);
-                nested_li.setOrientation(LinearLayout.HORIZONTAL);
-                nested_li.setLayoutParams(lp);
-                nested_li.setPadding(5,5,5,5);
+                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                LinearLayout nested_linear_layout = new LinearLayout(context);
+                nested_linear_layout.setOrientation(LinearLayout.HORIZONTAL);
+                nested_linear_layout.setLayoutParams(layoutParams);
+                nested_linear_layout.setPadding(5,5,5,5);
 
-                TextView tv = new TextView(context);
-                tv.setText("Route " + (i + 1));
-                tv.setTextColor(Color.WHITE);
-                tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-                nested_li.addView(tv);
+                TextView displayTextView = new TextView(context);
+                displayTextView.setText("Route " + (i + 1));
+                displayTextView.setTextColor(Color.WHITE);
+                displayTextView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+                nested_linear_layout.addView(displayTextView);
 
-                TextView tvMiles = new TextView(context);
-                tvMiles.setText(round(distance * metersToMilesMultiplier, 1) + " miles");
-                tvMiles.setTextColor(Color.WHITE);
-                tvMiles.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-                nested_li.addView(tvMiles);
+                TextView displayTextViewMiles = new TextView(context);
+                displayTextViewMiles.setText(round(distance * metersToMilesMultiplier, 1) + " miles");
+                displayTextViewMiles.setTextColor(Color.WHITE);
+                displayTextViewMiles.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+                nested_linear_layout.addView(displayTextViewMiles);
 
-                Button myButton = new Button(context);
-                myButton.setBackgroundResource(R.color.mapboxBlue);
-                myButton.setText("SELECT");
-                myButton.setTextColor(Color.WHITE);
-                myButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-                nested_li.addView(myButton);
+                Button navigateToButton = new Button(context);
+                navigateToButton.setBackgroundResource(R.color.mapboxBlue);
+                navigateToButton.setText("SELECT");
+                navigateToButton.setTextColor(Color.WHITE);
+                navigateToButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+                nested_linear_layout.addView(navigateToButton);
 
-                buttonLayout.addView(nested_li);
-                myButton.setOnClickListener(new View.OnClickListener() {
+                buttonLayout.addView(nested_linear_layout);
+                navigateToButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         for (Overlay o: mv.getOverlays())
@@ -243,11 +246,11 @@ public class CustomInfoWindow extends InfoWindow
             PathOverlay pathOverlay  = new PathOverlay();
             pathOverlay.getPaint().setStyle(Paint.Style.STROKE);
 
-            JSONArray jarray = jsonObject.getJSONArray("routes").getJSONObject(0).getJSONObject("geometry").getJSONArray("coordinates");
-            for (int i = 0; i < jarray.length(); i++)
+            JSONArray jsonArray = jsonObject.getJSONArray("routes").getJSONObject(0).getJSONObject("geometry").getJSONArray("coordinates");
+            for (int i = 0; i < jsonArray.length(); i++)
             {
-                JSONArray jo = jarray.getJSONArray(i);
-                pathOverlay.addPoint(Double.parseDouble(jo.get(1).toString()), Double.parseDouble(jo.get(0).toString()));
+                JSONArray tempJsonArray = jsonArray.getJSONArray(i);
+                pathOverlay.addPoint(Double.parseDouble(tempJsonArray.get(1).toString()), Double.parseDouble(tempJsonArray.get(0).toString()));
             }
 
             pathOverlay.getPaint().setColor(Color.BLUE);

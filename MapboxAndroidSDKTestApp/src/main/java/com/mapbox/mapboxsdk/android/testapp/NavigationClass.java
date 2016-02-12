@@ -24,12 +24,16 @@ public class NavigationClass extends Fragment implements TabLayout.OnTabSelected
 {
     private MapView mapView = null;
     private LatLng navigationLatLng = null;
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
+        LatLng tempLatLng = new LatLng(39.1321095, -84.5177543);
         final View view = inflater.inflate(R.layout.fragment_navigation_explorer, container, false);
         Button search = (Button)view.findViewById(R.id.search);
         final EditText input = (EditText)view.findViewById(R.id.input);
+
         mapView = (MapView) view.findViewById(R.id.mapview);
+        mapView.setCenter(tempLatLng);
 
         search.setOnClickListener(new Button.OnClickListener()
         {
