@@ -1,14 +1,7 @@
 package com.mapbox.mapboxsdk.android.testapp;
 
-import android.app.FragmentTransaction;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -21,11 +14,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -34,6 +23,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	private NavigationView        mNavigationView;
 	private Menu                  testFragmentNames;
 	private int selectedFragmentIndex = 0;
+
+	public String addressString;
+	public String cityStateString;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -178,6 +170,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
 			case 20:
 				fragment = new NavigationClass();
+				//fragment = new SendFragment();
 				break;
 			default:
 				fragment = new MainTestFragment();
@@ -215,4 +208,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		}
 	}
 
+	public void addContactInformation(View view)
+	{
+		// Generate new intent.
+		Intent intent = new Intent(Intent.ACTION_SEND);
+		String title = "Add to";
+
+		// MapBox wishes to share text with other applications.
+		intent.setType("text/plain");
+
+		TextView titleText = (TextView)view.findViewById(R.id.customTooltip_title);
+		TextView descriptionText = (TextView)view.findViewById(R.id.customTooltip_Description);
+
+		//String addressString = titleText.getText().toString() + ", " + descriptionText.getText().toString();
+		String finalString = addressString + ", " + cityStateString;
+
+		intent.putExtra(Intent.EXTRA_TEXT, finalString);
+
+		startActivity(intent);
+	}
+
+	public void openContactDialog(View view)
+	{
+		// Lets get the Street Address and City, State information from the CustomInfoWindow instance.
+		TextView titleText = (TextView)view.findViewById(R.id.customTooltip_title);
+		TextView descriptionText = (TextView)view.findViewById(R.id.customTooltip_Description);
+
+		// We create these global variables to store the address and city, state information for future use.
+		addressString = titleText.getText().toString();
+		cityStateString = descriptionText.getText().toString();
+
+		// We create a Bundle to pass addressString and cityStateString as arguments to fragment.
+		Bundle args = new Bundle();
+		args.putString("address", addressString);
+		args.putString("cityState", cityStateString);
+
+		// Instantiate the SendFragment.
+		Fragment fragment = new SendFragment();
+		fragment.setArguments(args);
+
+		// Switch support fragment to SendFragment.
+		FragmentManager fragmentManager = getSupportFragmentManager();
+		fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+	}
 }

@@ -13,25 +13,32 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:onClick="openContactDialog">
+
         <TextView
             android:id="@+id/customTooltip_title"
             android:layout_width="wrap_content"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:textColor="@color/black"
             android:textSize="25sp"
             android:layout_gravity="start"
             android:layout_weight="1"
-            android:text="@string/toolTipTitle"/>
+            android:text="@string/toolTipTitle" />
 
         <TextView
             android:id="@+id/customTooltip_Description"
             android:layout_width="wrap_content"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:textColor="@color/black"
             android:textSize="25sp"
             android:layout_gravity="start"
             android:layout_weight="1"
             android:text="@string/toolTipDescription"/>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/customTooltip_Navigate"
@@ -41,7 +48,7 @@
             android:textSize="25sp"
             android:layout_gravity="start"
             android:layout_weight="1"
-            android:text="@string/toolTipNavigate"/>
+            android:text="@string/toolTipNavigate" />
 
     </LinearLayout>
 
