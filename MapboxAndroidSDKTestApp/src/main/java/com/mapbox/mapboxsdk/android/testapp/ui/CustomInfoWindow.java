@@ -51,8 +51,7 @@ public class CustomInfoWindow extends InfoWindow
         setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    // Demonstrate custom onTouch() control
+                if (event.getAction() == MotionEvent.ACTION_UP) {// Demonstrate custom onTouch() control
                     Toast.makeText(mView.getContext(), R.string.customInfoWindowOnTouchMessage, Toast.LENGTH_SHORT).show();
 
                     // Still close the InfoWindow though
@@ -129,102 +128,11 @@ public class CustomInfoWindow extends InfoWindow
                 }
             }
         });
-
-        /*
-        TextView streetText = (TextView)getView().findViewById(R.id.street_address_text);
-        streetText.setOnClickListener(new TextView.OnClickListener()
-        {
-            @Override
-            public void onClick(View arg0)
-            {
-
-            }
-        });
-        */
-
-        /*text.setOnLongClickListener(new TextView.OnLongClickListener()
-        {
-            @Override
-            public boolean onLongClick(View arg0)
-            {
-                // Logic to run method openContactDialog.
-                MainActivity.openContactDialog(getView());
-
-                return true;
-            }
-        });
-        */
-
-        /*
-        // Add own OnTouchListener to customize handling InfoWindow touch events
-        setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    mapView.closeCurrentTooltip();
-
-                    Geocoder geo;
-                    String finalProvider;
-                    List<Address> addressList = null;
-                    LocationManager locationManager = (LocationManager) v.getContext().getSystemService(Context.LOCATION_SERVICE);
-
-                    Criteria criteria = new Criteria();
-                    finalProvider = locationManager.getBestProvider(criteria, false);
-                    Location location = locationManager.getLastKnownLocation(finalProvider);
-                    geo = new Geocoder(v.getContext());
-
-                    try {
-                        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-                        StrictMode.setThreadPolicy(policy);
-
-                        // Case for when the location can be determined.
-                        if (location != null) {
-                            addressList = geo.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-                            latitude = (double) addressList.get(0).getLatitude();
-                            longitude = (double) addressList.get(0).getLongitude();
-                            mapView.addMarker(new Marker(mapView, addressList.get(0).getAddressLine(0), addressList.get(0).getLocality() + ", " + addressList.get(0).getAdminArea(), new LatLng(latitude, longitude)));
-
-                        }
-                        // Case for when the location can not be determined.
-                        else {
-                            latitude = 39.1321095;
-                            longitude = -84.5177543;
-                            mapView.addMarker(new Marker(mapView, "University of Cincinnati", "2600 Clifton Avenue" + ", " + "Cincinnati, Ohio", new LatLng(latitude, longitude)));
-                        }
-
-                        String sURL = "https://api.mapbox.com/v4/directions/mapbox.driving/" + longitude + "," + latitude + ";" + navigateTo.getLongitude() + "," + navigateTo.getLatitude() + ".json?access_token=pk.eyJ1IjoicmVzZXJhZCIsImEiOiJjaWs4dzdubWgwMHhvdXhrdXN2eTd5djVoIn0.nTcJFOD8ofmioyrjiADLRA";
-
-                        URL url = new URL(sURL);
-                        HttpURLConnection request = (HttpURLConnection) url.openConnection();
-
-                        request.setRequestMethod("GET");
-                        request.setRequestProperty("Content-length", "0");
-                        request.setUseCaches(false);
-                        request.setAllowUserInteraction(false);
-                        request.connect();
-
-                        JSONObject jsonObject = null;
-                        jsonObject = readJsonFromUrl(sURL);
-                        displayRoutes(mapView, v.getContext(), jsonObject);
-                    } catch (IOException e) {
-                        Toast.makeText(v.getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                    } catch (JSONException e) {
-                        Toast.makeText(v.getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                }
-                // Return true as we're done processing this event
-                return true;
-            }
-        });
-        */
-
     }
 
-
-    private static String readAll(Reader reader) throws IOException
+    private static String readAll(Reader reader, StringBuilder sb) throws IOException
     {
         int temp;
-        StringBuilder sb = new StringBuilder();
 
         while ((temp = reader.read()) != -1)
         {
@@ -237,12 +145,14 @@ public class CustomInfoWindow extends InfoWindow
     public static JSONObject readJsonFromUrl(String url) throws IOException, JSONException
     {
         InputStream is = new URL(url).openStream();
+        StringBuilder stringBuilder = new StringBuilder();
 
         try
         {
             BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
-            String jsonText = readAll(rd);
+            String jsonText = readAll(rd, stringBuilder);
             JSONObject jsonObject = new JSONObject(jsonText);
+
             return jsonObject;
         }
         finally
@@ -265,6 +175,8 @@ public class CustomInfoWindow extends InfoWindow
         alertDialog.show();
 
         double metersToMilesMultiplier = 0.000621371;
+        int scale = (int) Math.pow(10, 1);
+        double roundedMiles;
 
         try
         {
@@ -277,7 +189,7 @@ public class CustomInfoWindow extends InfoWindow
                 LinearLayout nested_linear_layout = new LinearLayout(context);
                 nested_linear_layout.setOrientation(LinearLayout.HORIZONTAL);
                 nested_linear_layout.setLayoutParams(layoutParams);
-                nested_linear_layout.setPadding(5,5,5,5);
+                nested_linear_layout.setPadding(5, 5, 5, 5);
 
                 TextView displayTextView = new TextView(context);
                 displayTextView.setText("Route " + (i + 1));
@@ -286,7 +198,8 @@ public class CustomInfoWindow extends InfoWindow
                 nested_linear_layout.addView(displayTextView);
 
                 TextView displayTextViewMiles = new TextView(context);
-                displayTextViewMiles.setText(round(distance * metersToMilesMultiplier, 1) + " miles");
+                roundedMiles = (double) Math.round((distance * metersToMilesMultiplier) * scale) / scale;
+                displayTextViewMiles.setText(roundedMiles + " miles");
                 displayTextViewMiles.setTextColor(Color.WHITE);
                 displayTextViewMiles.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
                 nested_linear_layout.addView(displayTextViewMiles);
@@ -326,12 +239,7 @@ public class CustomInfoWindow extends InfoWindow
             PathOverlay pathOverlay  = new PathOverlay();
             pathOverlay.getPaint().setStyle(Paint.Style.STROKE);
 
-            JSONArray jsonArray = jsonObject.getJSONArray("routes").getJSONObject(0).getJSONObject("geometry").getJSONArray("coordinates");
-            for (int i = 0; i < jsonArray.length(); i++)
-            {
-                JSONArray tempJsonArray = jsonArray.getJSONArray(i);
-                pathOverlay.addPoint(Double.parseDouble(tempJsonArray.get(1).toString()), Double.parseDouble(tempJsonArray.get(0).toString()));
-            }
+            jsonArrayRouting(pathOverlay, jsonObject, context);
 
             pathOverlay.getPaint().setColor(Color.BLUE);
             mv.addOverlay(pathOverlay);
@@ -340,17 +248,25 @@ public class CustomInfoWindow extends InfoWindow
             mv.setCenter(new LatLng(latitude, longitude));
 
         }
-        catch (JSONException e)
+        catch (Exception e)
         {
             Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
-    // Round values.
-    private static double round (double value, int precision)
+    public void jsonArrayRouting(PathOverlay pathOverlay,JSONObject jsonObject, Context context)
     {
-        int scale = (int) Math.pow(10, precision);
-        return (double) Math.round(value * scale) / scale;
+        try {
+            JSONArray jsonArray = jsonObject.getJSONArray("routes").getJSONObject(0).getJSONObject("geometry").getJSONArray("coordinates");
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONArray tempJsonArray = jsonArray.getJSONArray(i);
+                pathOverlay.addPoint(Double.parseDouble(tempJsonArray.get(1).toString()), Double.parseDouble(tempJsonArray.get(0).toString()));
+            }
+        }
+        catch (Exception e)
+        {
+            Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     /**

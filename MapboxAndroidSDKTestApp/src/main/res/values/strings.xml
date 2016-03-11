@@ -11,7 +11,7 @@
     <!-- SendFragment Dialog Form Changes -->
     <string name="street_address">Street Address</string>
     <string name="city_state">City, State</string>
-    <string name="add_contact">Add Contact</string>
+    <string name="add_contact">Add to Contact</string>
 
     <string name="mainTestMap">Main Test Map</string>
     <string name="alternateTestMap">Alternate Test Map</string>

@@ -217,10 +217,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		// MapBox wishes to share text with other applications.
 		intent.setType("text/plain");
 
-		TextView titleText = (TextView)view.findViewById(R.id.customTooltip_title);
-		TextView descriptionText = (TextView)view.findViewById(R.id.customTooltip_Description);
-
-		//String addressString = titleText.getText().toString() + ", " + descriptionText.getText().toString();
 		String finalString = addressString + ", " + cityStateString;
 
 		intent.putExtra(Intent.EXTRA_TEXT, finalString);
