@@ -19,12 +19,19 @@ import android.widget.TextView;
 
 import org.apache.commons.io.IOUtils;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Signature;
 import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
@@ -227,6 +234,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	{
 		String finalString = addressString + ", " + cityStateString;
 
+		//generateSignature(finalString);
+
 		byte[] finalStringByte = finalString.getBytes(Charset.forName("UTF-8"));
 		PublicKey publicKey = readPublicKey();
 
@@ -247,7 +256,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		return keyFactory.generatePublic(publicSpec);
 	}
 
-	public byte[] getPublicKey() throws Exception {
+	public byte[] getPublicKey() throws Exception
+	{
 		AssetManager assetManager = getAssets();
 		InputStream inputStream = assetManager.open("public.der");
 		byte[] keyBytes = null;
@@ -290,5 +300,83 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		// Switch support fragment to SendFragment.
 		FragmentManager fragmentManager = getSupportFragmentManager();
 		fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+	}
+
+	// Generate a DSA signature.
+	public boolean generateSignature(String stringAddress) throws Exception
+	{
+		byte[] stringAddressToByte = stringAddress.getBytes("UTF8");
+
+		try
+		{
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", "SUN");
+			SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+			keyGen.initialize(1024, random);
+			KeyPair pair = keyGen.generateKeyPair();
+
+			PrivateKey privateKey = pair.getPrivate();
+			PublicKey publicKey = pair.getPublic();
+
+			Signature signature = Signature.getInstance("SHA1withDSA", "SUN");
+			signature.initSign(privateKey);
+			signature.update(stringAddressToByte);
+
+			byte[] realSignature = signature.sign();
+			return verifySignature(stringAddressToByte, realSignature, publicKey);
+		}
+		catch (Exception ex)
+		{
+			return false;
+		}
+	}
+
+	// Verify a DSA signature.
+	public boolean verifySignature(byte[] originalData, byte[] encryptedData, PublicKey publicKey)
+	{
+		boolean verifies = false;
+		String original = new String(originalData);
+		String encrypted = new String(encryptedData);
+
+		try
+		{
+			FileInputStream keyfis = new FileInputStream(publicKey.toString());
+			byte[] encKey = new byte[keyfis.available()];
+
+			keyfis.read(encKey);
+			keyfis.close();
+
+			X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(encKey);
+			KeyFactory keyFactory = KeyFactory.getInstance("DSA", "SUN");
+			PublicKey pubKey = keyFactory.generatePublic(pubKeySpec);
+
+			FileInputStream sigfis = new FileInputStream(encrypted);
+			byte[] sigToVerify = new byte[sigfis.available()];
+			sigfis.read(sigToVerify);
+			sigfis.close();
+
+
+			Signature sig = Signature.getInstance("SHA1withDSA", "SUN");
+			sig.initVerify(pubKey);
+			FileInputStream datafis = new FileInputStream(original);
+
+			BufferedInputStream bufin = new BufferedInputStream(datafis);
+
+			byte[] buffer = new byte[1024];
+			int len;
+			while (bufin.available() != 0)
+			{
+				len = bufin.read(buffer);
+				sig.update(buffer, 0, len);
+			};
+
+			bufin.close();
+			verifies = sig.verify(sigToVerify);
+
+		}
+		catch (Exception e)
+		{
+			System.err.println("Caught exception " + e.toString());
+		}
+		return verifies;
 	}
 }
