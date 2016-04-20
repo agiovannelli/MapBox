@@ -1,6 +1,7 @@
 package com.mapbox.mapboxsdk.android.testapp;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
@@ -17,8 +18,20 @@ import com.mapbox.mapboxsdk.android.testapp.ui.CustomInfoWindow;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.overlay.Marker;
 import com.mapbox.mapboxsdk.views.MapView;
+
+import org.apache.commons.io.IOUtils;
+
+import java.io.InputStream;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+
+import javax.crypto.Cipher;
 
 public class NavigationClass extends Fragment implements TabLayout.OnTabSelectedListener
 {
@@ -97,18 +110,95 @@ public class NavigationClass extends Fragment implements TabLayout.OnTabSelected
             {
                 return null;
             }
+
             Address location = address.get(0);
-            location.getLatitude();
-            location.getLongitude();
 
-            p1 = new LatLng(location.getLatitude(), location.getLongitude() );
+            byte[] signedData = signingData(location.getFeatureName(), context);
 
+            if (verifySignature(location.getFeatureName(), signedData, context))
+            {
+                location.getLatitude();
+                location.getLongitude();
+
+                p1 = new LatLng(location.getLatitude(), location.getLongitude());
+            }
         }
         catch (Exception ex)
         {
             ex.printStackTrace();
         }
-
         return p1;
     }
+    public PublicKey readPublicKey(String keyFile, Context context) throws Exception
+    {
+        X509EncodedKeySpec publicSpec = new X509EncodedKeySpec(getKey(keyFile, context));
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(publicSpec);
+    }
+
+    public PrivateKey readPrivateKey(String keyFile, Context context) throws Exception
+    {
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(getKey(keyFile, context));
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePrivate(keySpec);
+    }
+
+    public byte[] getKey(String keyFile, Context context) throws Exception
+    {
+        AssetManager assetManager = context.getAssets();
+        InputStream inputStream = assetManager.open(keyFile);
+        byte[] keyBytes = null;
+
+        if (inputStream != null)
+        {
+            keyBytes = IOUtils.toByteArray(inputStream);
+            inputStream.close();
+        }
+
+        return keyBytes;
+    }
+
+    // encrypt PrivateKey Overload. Used for digital signing process.
+    public byte[] encrypt(PrivateKey key, byte[] plaintext) throws Exception
+    {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        return cipher.doFinal(plaintext);
+    }
+
+    // decrypt PublicKey Overload. Used for digital signing process.
+    public byte[] decrypt(PublicKey key, byte[] ciphertext) throws Exception
+    {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        return cipher.doFinal(ciphertext);
+    }
+
+    // Signs original data using the private key.
+    public byte[] signingData(String originalData, Context context) throws Exception
+    {
+        byte[] originalByte = originalData.getBytes();
+        PrivateKey privateKey = readPrivateKey("private.der", context);
+        byte[] encryptedData = encrypt(privateKey, originalByte);
+        return encryptedData;
+    }
+
+    // Verifies encrypted data matches that of the original data after decryption using public key.
+    public boolean verifySignature(String originalData, byte[] encryptedData, Context context) throws Exception
+    {
+        // Initialize verified to false.
+        boolean verified = false;
+        byte[] originalByte = originalData.getBytes();
+
+        PublicKey publicKey = readPublicKey("public.der", context);
+        byte[] decryptedData = decrypt(publicKey, encryptedData);
+
+        // Compare the byte arrays for equality. When equal, update verified to true.
+        if (Arrays.equals(originalByte, decryptedData))
+        {
+            verified = true;
+        }
+        return verified;
+    }
+
 }
