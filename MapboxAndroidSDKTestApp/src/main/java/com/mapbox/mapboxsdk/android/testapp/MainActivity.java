@@ -1,6 +1,7 @@
 package com.mapbox.mapboxsdk.android.testapp;
 
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -15,6 +16,20 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+
+import org.apache.commons.io.IOUtils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+
+import javax.crypto.Cipher;
+import java.lang.Object;
+
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -208,20 +223,49 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		}
 	}
 
-	public void addContactInformation(View view)
+	public void addContactInformation(View view) throws Exception
 	{
-		// Generate new intent.
-		Intent intent = new Intent(Intent.ACTION_SEND);
-		String title = "Add to";
-
-		// MapBox wishes to share text with other applications.
-		intent.setType("text/plain");
-
 		String finalString = addressString + ", " + cityStateString;
 
-		intent.putExtra(Intent.EXTRA_TEXT, finalString);
+		byte[] finalStringByte = finalString.getBytes(Charset.forName("UTF-8"));
+		PublicKey publicKey = readPublicKey();
+
+		byte[] finalStringEncrypted = encrypt(publicKey, finalStringByte);
+
+		// Generate new intent.
+		Intent intent = new Intent(Intent.ACTION_SEND);
+		intent.setType("text/plain");
+		intent.putExtra(Intent.EXTRA_TEXT, finalStringEncrypted);
 
 		startActivity(intent);
+	}
+
+	public PublicKey readPublicKey() throws Exception
+	{
+		X509EncodedKeySpec publicSpec = new X509EncodedKeySpec(getPublicKey());
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+		return keyFactory.generatePublic(publicSpec);
+	}
+
+	public byte[] getPublicKey() throws Exception {
+		AssetManager assetManager = getAssets();
+		InputStream inputStream = assetManager.open("public.der");
+		byte[] keyBytes = null;
+
+		if (inputStream != null)
+		{
+			keyBytes = IOUtils.toByteArray(inputStream);
+			inputStream.close();
+		}
+
+		return keyBytes;
+	}
+
+	public byte[] encrypt(PublicKey key, byte[] plaintext) throws Exception
+	{
+		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		return cipher.doFinal(plaintext);
 	}
 
 	public void openContactDialog(View view)
