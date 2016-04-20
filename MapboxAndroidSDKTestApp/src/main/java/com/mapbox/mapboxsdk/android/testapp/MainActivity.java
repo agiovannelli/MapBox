@@ -32,10 +32,12 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
 import java.lang.Object;
+import java.util.Arrays;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -230,54 +232,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		}
 	}
 
-	public void addContactInformation(View view) throws Exception
-	{
-		String finalString = addressString + ", " + cityStateString;
-
-		//generateSignature(finalString);
-
-		byte[] finalStringByte = finalString.getBytes(Charset.forName("UTF-8"));
-		PublicKey publicKey = readPublicKey();
-
-		byte[] finalStringEncrypted = encrypt(publicKey, finalStringByte);
-
-		// Generate new intent.
-		Intent intent = new Intent(Intent.ACTION_SEND);
-		intent.setType("text/plain");
-		intent.putExtra(Intent.EXTRA_TEXT, finalStringEncrypted);
-
-		startActivity(intent);
-	}
-
-	public PublicKey readPublicKey() throws Exception
-	{
-		X509EncodedKeySpec publicSpec = new X509EncodedKeySpec(getPublicKey());
-		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-		return keyFactory.generatePublic(publicSpec);
-	}
-
-	public byte[] getPublicKey() throws Exception
-	{
-		AssetManager assetManager = getAssets();
-		InputStream inputStream = assetManager.open("public.der");
-		byte[] keyBytes = null;
-
-		if (inputStream != null)
-		{
-			keyBytes = IOUtils.toByteArray(inputStream);
-			inputStream.close();
-		}
-
-		return keyBytes;
-	}
-
-	public byte[] encrypt(PublicKey key, byte[] plaintext) throws Exception
-	{
-		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
-		cipher.init(Cipher.ENCRYPT_MODE, key);
-		return cipher.doFinal(plaintext);
-	}
-
 	public void openContactDialog(View view)
 	{
 		// Lets get the Street Address and City, State information from the CustomInfoWindow instance.
@@ -302,81 +256,119 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
 	}
 
-	// Generate a DSA signature.
-	public boolean generateSignature(String stringAddress) throws Exception
+	// When the Add to Contact button is pressed, do necessary security measures and pass address
+	// information to the Contact Manager application as text.
+	public void addContactInformation(View view) throws Exception
 	{
-		byte[] stringAddressToByte = stringAddress.getBytes("UTF8");
+		// Concatenation of address and city/state strings.
+		String finalString = addressString + ", " + cityStateString;
 
-		try
+		// Digital Signature authentication.
+		byte[] signedData = signingData(finalString);
+		boolean verifiedSignature = verifySignature(finalString, signedData);
+
+		// When digital signature is verified, we continue to do encryption of data for passage to Contact Manager.
+		if (verifiedSignature)
 		{
-			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", "SUN");
-			SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
-			keyGen.initialize(1024, random);
-			KeyPair pair = keyGen.generateKeyPair();
+			byte[] finalStringByte = finalString.getBytes(Charset.forName("UTF-8"));
+			PublicKey publicKey = readPublicKey("public.der");
 
-			PrivateKey privateKey = pair.getPrivate();
-			PublicKey publicKey = pair.getPublic();
+			byte[] finalStringEncrypted = encrypt(publicKey, finalStringByte);
 
-			Signature signature = Signature.getInstance("SHA1withDSA", "SUN");
-			signature.initSign(privateKey);
-			signature.update(stringAddressToByte);
+			// Generate new intent.
+			Intent intent = new Intent(Intent.ACTION_SEND);
+			intent.setType("text/plain");
+			intent.putExtra(Intent.EXTRA_TEXT, finalStringEncrypted);
 
-			byte[] realSignature = signature.sign();
-			return verifySignature(stringAddressToByte, realSignature, publicKey);
-		}
-		catch (Exception ex)
-		{
-			return false;
+			startActivity(intent);
 		}
 	}
 
-	// Verify a DSA signature.
-	public boolean verifySignature(byte[] originalData, byte[] encryptedData, PublicKey publicKey)
+	public PublicKey readPublicKey(String keyFile) throws Exception
 	{
-		boolean verifies = false;
-		String original = new String(originalData);
-		String encrypted = new String(encryptedData);
+		X509EncodedKeySpec publicSpec = new X509EncodedKeySpec(getKey(keyFile));
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+		return keyFactory.generatePublic(publicSpec);
+	}
 
-		try
+	public PrivateKey readPrivateKey(String keyFile) throws Exception
+	{
+		PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(getKey(keyFile));
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+		return keyFactory.generatePrivate(keySpec);
+	}
+
+	public byte[] getKey(String keyFile) throws Exception
+	{
+		AssetManager assetManager = getAssets();
+		InputStream inputStream = assetManager.open(keyFile);
+		byte[] keyBytes = null;
+
+		if (inputStream != null)
 		{
-			FileInputStream keyfis = new FileInputStream(publicKey.toString());
-			byte[] encKey = new byte[keyfis.available()];
-
-			keyfis.read(encKey);
-			keyfis.close();
-
-			X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(encKey);
-			KeyFactory keyFactory = KeyFactory.getInstance("DSA", "SUN");
-			PublicKey pubKey = keyFactory.generatePublic(pubKeySpec);
-
-			FileInputStream sigfis = new FileInputStream(encrypted);
-			byte[] sigToVerify = new byte[sigfis.available()];
-			sigfis.read(sigToVerify);
-			sigfis.close();
-
-
-			Signature sig = Signature.getInstance("SHA1withDSA", "SUN");
-			sig.initVerify(pubKey);
-			FileInputStream datafis = new FileInputStream(original);
-
-			BufferedInputStream bufin = new BufferedInputStream(datafis);
-
-			byte[] buffer = new byte[1024];
-			int len;
-			while (bufin.available() != 0)
-			{
-				len = bufin.read(buffer);
-				sig.update(buffer, 0, len);
-			};
-
-			bufin.close();
-			verifies = sig.verify(sigToVerify);
-
+			keyBytes = IOUtils.toByteArray(inputStream);
+			inputStream.close();
 		}
-		catch (Exception e)
+
+		return keyBytes;
+	}
+
+	// encrypt PublicKey Overload. Used for encryption between MapBox and ContactManager.
+	public byte[] encrypt(PublicKey key, byte[] plaintext) throws Exception
+	{
+		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		return cipher.doFinal(plaintext);
+	}
+
+	// encrypt PrivateKey Overload. Used for digital signing process.
+	public byte[] encrypt(PrivateKey key, byte[] plaintext) throws Exception
+	{
+		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		return cipher.doFinal(plaintext);
+	}
+
+	// decrypt PrivateKey Overload. Used for decryption between MapBox and ContactManager.
+	public byte[] decrypt(PrivateKey key, byte[] ciphertext) throws Exception
+	{
+		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
+		cipher.init(Cipher.DECRYPT_MODE, key);
+		return cipher.doFinal(ciphertext);
+	}
+
+	// decrypt PublicKey Overload. Used for digital signing process.
+	public byte[] decrypt(PublicKey key, byte[] ciphertext) throws Exception
+	{
+		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
+		cipher.init(Cipher.DECRYPT_MODE, key);
+		return cipher.doFinal(ciphertext);
+	}
+
+	// Signs original data using the private key.
+	public byte[] signingData(String originalData) throws Exception
+	{
+		byte[] originalByte = originalData.getBytes();
+		PrivateKey privateKey = readPrivateKey("private.der");
+		byte[] encryptedData = encrypt(privateKey, originalByte);
+		return encryptedData;
+	}
+
+	// Verifies encrypted data matches that of the original data after decryption using public key.
+	public boolean verifySignature(String originalData, byte[] encryptedData) throws Exception
+	{
+		// Initialize verified to false.
+		boolean verified = false;
+		byte[] originalByte = originalData.getBytes();
+
+		PublicKey publicKey = readPublicKey("public.der");
+		byte[] decryptedData = decrypt(publicKey, encryptedData);
+
+		// Compare the byte arrays for equality. When equal, update verified to true.
+		if (Arrays.equals(originalByte, decryptedData))
 		{
-			System.err.println("Caught exception " + e.toString());
+			verified = true;
 		}
-		return verifies;
+		return verified;
 	}
 }
